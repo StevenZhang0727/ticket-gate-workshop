@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Smart Ticket Gate</title>
+  <style>
+    :root {
+      --ink: #102a43;
+      --muted: #64748b;
+      --teal: #0f766e;
+      --orange: #f97316;
+      --yellow: #fbbf24;
+      --green: #16a34a;
+      --red: #dc2626;
+      --line: #cbd5e1;
+      --bg: #f8fafc;
+      --card: #ffffff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+    }
+    header {
+      padding: 18px 16px 12px;
+      background: var(--teal);
+      color: white;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(24px, 7vw, 40px);
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+    header p {
+      margin: 8px 0 0;
+      font-size: 15px;
+      opacity: .95;
+    }
+    main {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+    section {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    h2 { margin: 0 0 8px; font-size: 22px; }
+    .hint { color: var(--muted); margin: 0 0 14px; line-height: 1.4; }
+    .cards {
+      display: grid;
+      gap: 10px;
+      margin: 12px 0;
+    }
+    .rule-card {
+      min-height: 56px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      border: 2px solid var(--line);
+      border-left: 9px solid var(--teal);
+      border-radius: 8px;
+      background: white;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 18px;
+      font-weight: 700;
+      touch-action: none;
+      user-select: none;
+      cursor: grab;
+    }
+    .rule-card.dragging { opacity: .45; border-style: dashed; }
+    .rule-card.broken { border-left-color: var(--red); }
+    .handle {
+      width: 26px;
+      height: 26px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: #ecfdf5;
+      color: var(--teal);
+      flex: 0 0 auto;
+    }
+    button {
+      border: 0;
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 16px;
+      font-weight: 700;
+      background: var(--teal);
+      color: white;
+      cursor: pointer;
+    }
+    button.secondary { background: var(--orange); }
+    .result {
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 8px;
+      background: #f1f5f9;
+      line-height: 1.45;
+      min-height: 46px;
+    }
+    .ok { color: var(--green); font-weight: 700; }
+    .bad { color: var(--red); font-weight: 700; }
+    .customers {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .customer {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      background: #fff7ed;
+    }
+    .customer strong { display: block; font-size: 18px; }
+    .mini {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+    footer {
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+      padding: 8px 16px 22px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>The Smart Ticket Gate</h1>
+    <p>Drag the rules into a smart top-to-bottom order. The first true rule wins.</p>
+  </header>
+  <main>
+    <section>
+      <h2>Activity 1: Build the Gate</h2>
+      <p class="hint">Move the rule cards into the correct order, then check the four customers. Work in pairs or groups of three.</p>
+      <div id="activity1" class="cards" aria-label="Activity 1 rule cards"></div>
+      <button id="check1">Check Activity 1</button>
+      <button id="reset1" class="secondary">Shuffle again</button>
+      <div id="result1" class="result">Tip: test Mia first. Which rule should catch a toddler?</div>
+      <div class="customers">
+        <div class="customer"><strong>Mia</strong>Age 2<div class="mini">Correct price: $0</div></div>
+        <div class="customer"><strong>Leo</strong>Age 10<div class="mini">Correct price: $15</div></div>
+        <div class="customer"><strong>Sam</strong>Age 35<div class="mini">Correct price: $30</div></div>
+        <div class="customer"><strong>Grace</strong>Age 70<div class="mini">Correct price: $12</div></div>
+      </div>
+    </section>
+    <section>
+      <h2>Activity 2: Debug the Gate</h2>
+      <p class="hint">This machine has a bug. Test Mia, age 2. What wrong price does she get, and how can you fix it?</p>
+      <div id="activity2" class="cards" aria-label="Activity 2 broken rule cards"></div>
+      <button id="check2">Check the bug</button>
+      <div id="result2" class="result">Question: does age 2 also match age <= 12?</div>
+    </section>
+  </main>
+  <footer>Designed for AELC1303 CAL 3 workshop practice.</footer>
+  <script>
+    const correct = [
+      "if age < 3 -> price = $0",
+      "else if age <= 12 -> price = $15",
+      "else if age >= 65 -> price = $12",
+      "else -> price = $30"
+    ];
+    const broken = [
+      "if age <= 12 -> price = $15",
+      "else if age < 3 -> price = $0",
+      "else if age >= 65 -> price = $12",
+      "else -> price = $30"
+    ];
+    const customers = [
+      { name: "Mia", age: 2 },
+      { name: "Leo", age: 10 },
+      { name: "Sam", age: 35 },
+      { name: "Grace", age: 70 }
+    ];
+
+    function shuffle(items) {
+      return [...items].sort(() => Math.random() - 0.5);
+    }
+
+    function renderCards(rootId, items, isBroken = false) {
+      const root = document.getElementById(rootId);
+      root.innerHTML = "";
+      items.forEach((text, index) => {
+        const card = document.createElement("div");
+        card.className = "rule-card" + (isBroken && index === 0 ? " broken" : "");
+        card.draggable = true;
+        card.dataset.value = text;
+        card.innerHTML = `<span class="handle">::</span><span>${text}</span>`;
+        root.appendChild(card);
+      });
+      enableDrag(root);
+    }
+
+    function enableDrag(container) {
+      let dragged = null;
+      container.querySelectorAll(".rule-card").forEach(card => {
+        card.addEventListener("dragstart", () => {
+          dragged = card;
+          card.classList.add("dragging");
+        });
+        card.addEventListener("dragend", () => {
+          card.classList.remove("dragging");
+          dragged = null;
+        });
+      });
+      container.addEventListener("dragover", event => {
+        event.preventDefault();
+        const after = [...container.querySelectorAll(".rule-card:not(.dragging)")].find(card => {
+          const box = card.getBoundingClientRect();
+          return event.clientY < box.top + box.height / 2;
+        });
+        if (!dragged) return;
+        if (after) container.insertBefore(dragged, after);
+        else container.appendChild(dragged);
+      });
+
+      let touchCard = null;
+      container.addEventListener("touchstart", event => {
+        touchCard = event.target.closest(".rule-card");
+        if (touchCard) touchCard.classList.add("dragging");
+      }, { passive: true });
+      container.addEventListener("touchmove", event => {
+        if (!touchCard) return;
+        const touch = event.touches[0];
+        const after = [...container.querySelectorAll(".rule-card:not(.dragging)")].find(card => {
+          const box = card.getBoundingClientRect();
+          return touch.clientY < box.top + box.height / 2;
+        });
+        if (after) container.insertBefore(touchCard, after);
+        else container.appendChild(touchCard);
+      }, { passive: true });
+      container.addEventListener("touchend", () => {
+        if (touchCard) touchCard.classList.remove("dragging");
+        touchCard = null;
+      });
+    }
+
+    function values(rootId) {
+      return [...document.querySelectorAll(`#${rootId} .rule-card`)].map(card => card.dataset.value);
+    }
+
+    function priceFor(age, rules) {
+      for (const rule of rules) {
+        if (rule.includes("age < 3") && age < 3) return 0;
+        if (rule.includes("age <= 12") && age <= 12) return 15;
+        if (rule.includes("age >= 65") && age >= 65) return 12;
+        if (rule.startsWith("else ->")) return 30;
+      }
+      return "?";
+    }
+
+    renderCards("activity1", shuffle(correct));
+    renderCards("activity2", broken, true);
+
+    document.getElementById("reset1").addEventListener("click", () => {
+      renderCards("activity1", shuffle(correct));
+      document.getElementById("result1").textContent = "Tip: test Mia first. Which rule should catch a toddler?";
+    });
+
+    document.getElementById("check1").addEventListener("click", () => {
+      const rules = values("activity1");
+      const isCorrect = correct.every((rule, index) => rules[index] === rule);
+      const total = customers.reduce((sum, c) => sum + priceFor(c.age, rules), 0);
+      document.getElementById("result1").innerHTML = isCorrect
+        ? `<span class="ok">Correct.</span> The rule order works. Total money = $${total}.`
+        : `<span class="bad">Not yet.</span> Your total is $${total}. Test Mia first and check which rule catches her.`;
+    });
+
+    document.getElementById("check2").addEventListener("click", () => {
+      const rules = values("activity2");
+      const miaPrice = priceFor(2, rules);
+      const fixed = correct.every((rule, index) => rules[index] === rule);
+      document.getElementById("result2").innerHTML = fixed
+        ? `<span class="ok">Fixed.</span> Mia now pays $0 because the toddler rule is first.`
+        : `<span class="bad">Bug found.</span> With this order, Mia pays $${miaPrice}. Move "age < 3" above "age <= 12".`;
+    });
+  </script>
+</body>
+</html>
