@@ -292,7 +292,7 @@
     document.getElementById("check2").addEventListener("click", () => {
       const rules = values("activity2");
       const miaPrice = priceFor(2, rules);
-      const fixed = correct.every((rule, index) => rules[index] === rule);
+      const fixed = activity1Works(rules);
       document.getElementById("result2").innerHTML = fixed
         ? `<span class="ok">Fixed.</span> Mia now pays $0 because the toddler rule is first.`
         : `<span class="bad">Bug found.</span> With this order, Mia pays $${miaPrice}. Move "age < 3" above "age <= 12".`;
