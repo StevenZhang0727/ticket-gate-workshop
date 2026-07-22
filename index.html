@@ -261,6 +261,17 @@
       return "?";
     }
 
+    function activity1Works(rules) {
+      const toddlerRule = "if age < 3 -> price = $0";
+      const childRule = "else if age <= 12 -> price = $15";
+      const fallbackRule = "else -> price = $30";
+      const expectedPrices = [0, 15, 30, 12];
+
+      return rules.indexOf(toddlerRule) < rules.indexOf(childRule)
+        && rules[rules.length - 1] === fallbackRule
+        && customers.every((customer, index) => priceFor(customer.age, rules) === expectedPrices[index]);
+    }
+
     renderCards("activity1", shuffle(correct));
     renderCards("activity2", broken, true);
 
@@ -271,10 +282,10 @@
 
     document.getElementById("check1").addEventListener("click", () => {
       const rules = values("activity1");
-      const isCorrect = correct.every((rule, index) => rules[index] === rule);
+      const isCorrect = activity1Works(rules);
       const total = customers.reduce((sum, c) => sum + priceFor(c.age, rules), 0);
       document.getElementById("result1").innerHTML = isCorrect
-        ? `<span class="ok">Correct.</span> The rule order works. Total money = $${total}.`
+        ? `<span class="ok">Correct.</span> The rule order works. Total money = $${total}. The child and senior rules can switch because they do not overlap.`
         : `<span class="bad">Not yet.</span> Your total is $${total}. Test Mia first and check which rule catches her.`;
     });
 
