@@ -165,7 +165,7 @@
       <p class="hint">This machine has a bug. Test Mia, age 2. What wrong price does she get? Which line causes it, and how should it be fixed?</p>
       <div id="activity2" class="cards" aria-label="Activity 2 broken rule cards"></div>
       <button id="check2">Check the bug</button>
-      <div id="result2" class="result">Question: does age 2 also match age <= 12?</div>
+      <div id="result2" class="result">Hint: does age 2 also match age <= 12?</div>
     </section>
   </main>
   <footer>Designed for AELC1303 CAL 3 workshop practice.</footer>
@@ -291,7 +291,7 @@
       const isCorrect = activity1Works(rules);
       const total = customers.reduce((sum, c) => sum + priceFor(c.age, rules), 0);
       document.getElementById("result1").innerHTML = isCorrect
-        ? `<span class="ok">Correct.</span> The rule order works. Total money = $${total}. The child and senior rules can switch because they do not overlap.`
+        ? `<span class="ok">Correct.</span> The rule order works. Total money = $${total}.`
         : `<span class="bad">Not yet.</span> Your total is $${total}. Test Mia first and check which rule catches her.`;
     });
 
