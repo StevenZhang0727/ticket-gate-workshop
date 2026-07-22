@@ -77,6 +77,10 @@
       cursor: grab;
     }
     .rule-card.dragging { opacity: .45; border-style: dashed; }
+    .rule-card.static {
+      cursor: default;
+      touch-action: auto;
+    }
     .rule-card.broken { border-left-color: var(--red); }
     .handle {
       width: 26px;
@@ -158,7 +162,7 @@
     </section>
     <section>
       <h2>Activity 2: Debug the Gate</h2>
-      <p class="hint">This machine has a bug. Test Mia, age 2. What wrong price does she get, and how can you fix it?</p>
+      <p class="hint">This machine has a bug. Test Mia, age 2. What wrong price does she get? Which line causes it, and how should it be fixed?</p>
       <div id="activity2" class="cards" aria-label="Activity 2 broken rule cards"></div>
       <button id="check2">Check the bug</button>
       <div id="result2" class="result">Question: does age 2 also match age <= 12?</div>
@@ -189,18 +193,20 @@
       return [...items].sort(() => Math.random() - 0.5);
     }
 
-    function renderCards(rootId, items, isBroken = false) {
+    function renderCards(rootId, items, isBroken = false, draggable = true) {
       const root = document.getElementById(rootId);
       root.innerHTML = "";
       items.forEach((text, index) => {
         const card = document.createElement("div");
-        card.className = "rule-card" + (isBroken && index === 0 ? " broken" : "");
-        card.draggable = true;
+        card.className = "rule-card" + (isBroken && index === 0 ? " broken" : "") + (draggable ? "" : " static");
+        card.draggable = draggable;
         card.dataset.value = text;
-        card.innerHTML = `<span class="handle">::</span><span>${text}</span>`;
+        card.innerHTML = draggable
+          ? `<span class="handle">::</span><span>${text}</span>`
+          : `<span>${text}</span>`;
         root.appendChild(card);
       });
-      enableDrag(root);
+      if (draggable) enableDrag(root);
     }
 
     function enableDrag(container) {
@@ -273,7 +279,7 @@
     }
 
     renderCards("activity1", shuffle(correct));
-    renderCards("activity2", broken, true);
+    renderCards("activity2", broken, true, false);
 
     document.getElementById("reset1").addEventListener("click", () => {
       renderCards("activity1", shuffle(correct));
@@ -292,10 +298,8 @@
     document.getElementById("check2").addEventListener("click", () => {
       const rules = values("activity2");
       const miaPrice = priceFor(2, rules);
-      const fixed = activity1Works(rules);
-      document.getElementById("result2").innerHTML = fixed
-        ? `<span class="ok">Fixed.</span> Mia now pays $0 because the toddler rule is first.`
-        : `<span class="bad">Bug found.</span> With this order, Mia pays $${miaPrice}. Move "age < 3" above "age <= 12".`;
+      document.getElementById("result2").innerHTML =
+        `<span class="bad">Bug found.</span> With this order, Mia pays $${miaPrice}. The fix is to move "age < 3" above "age <= 12".`;
     });
   </script>
 </body>
